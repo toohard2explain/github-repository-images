@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [manifest.json]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "version=$(jq -r .version manifest.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release exists
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build zip
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          zip -j "github-repo-icon-v${{ steps.version.outputs.version }}.zip" manifest.json background.js content.js
+
+      - name: Create release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            "github-repo-icon-v${{ steps.version.outputs.version }}.zip" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --generate-notes \
+            --target "${{ github.sha }}"

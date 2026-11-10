@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Repo Icon (.idea/icon.svg)",
+  "version": "1.0.0",
+  "description": "Replaces the round repo avatar on GitHub with .idea/icon.svg, if the repo has one.",
+  "author": "levihsmn",
+  "host_permissions": [
+    "https://github.com/*",
+    "https://raw.githubusercontent.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage"
+  ]
+}
